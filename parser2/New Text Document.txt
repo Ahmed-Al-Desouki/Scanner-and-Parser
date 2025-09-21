@@ -1,0 +1,98 @@
+struct Production {
+    string non_terminal;
+    vector<string> symbols;
+
+    
+    bool operator<(const Production& other) const {
+        if (non_terminal != other.non_terminal) {
+            return non_terminal < other.non_terminal;
+        }
+        return symbols < other.symbols;
+    }
+};
+
+####################################################################
+ParseTable generate_parse_table() {
+    ParseTable table;
+
+    // Hardcode productions for the CFG
+    vector<Production> productions = {
+        {"Exp", {"Term", "Expr"}},           // Exp → Term Expr
+        {"Expr", {"+", "Term", "Expr"}},     // Expr → + Term Expr
+        {"Expr", {"-", "Term", "Expr"}},     // Expr → - Term Expr
+        {"Expr", {}},                        // Expr → ε
+        {"Term", {"Factor", "Termp"}},       // Term → Factor Termp
+        {"Termp", {"*", "Factor", "Termp"}}, // Termp → * Factor Termp
+        {"Termp", {"/", "Factor", "Termp"}}, // Termp → / Factor Termp
+        {"Termp", {}},                       // Termp → ε
+        {"Factor", {"(", "Exp", ")"}},       // Factor → ( Exp )
+        {"Factor", {"id"}}                   // Factor → id
+    };
+
+    // Read first and follow sets
+    auto first = read_sets("first.txt");
+    auto follow = read_sets("follow.txt");
+
+    // Compute first sets for each production's right-hand side
+    map<Production, set<string>> first_of_production;
+    for (const auto& prod : productions) {
+        set<string> first_set;
+        if (prod.symbols.empty()) {
+            // Epsilon production
+            first_set.insert("epsilon");
+        } else {
+            // First symbol’s first set
+            string first_sym = prod.symbols[0];
+            if (first.count(first_sym)) {
+                // Non-terminal
+                first_set = first[first_sym];
+            } else {
+                // Terminal
+                first_set.insert(first_sym);
+            }
+            // If first symbol can derive epsilon, consider next (simplified)
+            if (first_set.count("epsilon") && prod.symbols.size() > 1) {//A -> B C , C -> e First A = First C
+                first_set.erase("epsilon");
+                string second_sym = prod.symbols[1];
+                if (first.count(second_sym)) {
+                    for (const auto& t : first[second_sym]) {
+                        first_set.insert(t);
+                    }
+                } else {
+                    first_set.insert(second_sym);
+                }
+            }
+        }
+        first_of_production[prod] = first_set;
+    }
+
+    // Build parsing table
+    for (const auto& prod : productions) {
+        string A = prod.non_terminal;
+        auto first_set = first_of_production[prod];
+
+        // Add production to table for terminals in First(α)
+        for (const auto& a : first_set) {
+            if (a != "epsilon") {
+                pair<string, string> key = {A, a};
+                if (table.find(key) != table.end()) {
+                    cerr << "Warning: LL(1) conflict at (" << A << ", " << a << ")" << endl;
+                }
+                table[key] = prod.symbols;
+            }
+        }
+
+        // If epsilon in First(α), add production for Follow(A)
+        if (first_set.count("epsilon")) {
+            for (const auto& b : follow[A]) {
+                pair<string, string> key = {A, b};
+                if (table.find(key) != table.end()) {
+                    cerr << "Warning: LL(1) conflict at (" << A << ", " << b << ")" << endl;
+                }
+                table[key] = prod.symbols; // Empty for epsilon
+            }
+        }
+    }
+
+    return table;
+}
