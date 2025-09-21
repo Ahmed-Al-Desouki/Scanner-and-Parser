@@ -1,0 +1,24 @@
+# depslib dependency file v1.0
+1746967357 source:e:\compilere\main.cpp
+	<iostream>
+	"Parse.h"
+
+1746975979 e:\compilere\parse.h
+	<iostream>
+	<string>
+	<vector>
+	<fstream>
+	<sstream>
+	"Node.h"
+
+1746967609 source:e:\compilere\parse.cpp
+	"Parse.h"
+
+1746967552 source:e:\compilere\node.cpp
+	"Node.h"
+
+1746974709 e:\compilere\node.h
+	<iostream>
+	<string>
+	<vector>
+

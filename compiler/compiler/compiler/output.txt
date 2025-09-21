@@ -1,0 +1,15 @@
+ID id
+SPACE  
+PLUS +
+SPACE  
+RIGHT_P (
+ID id
+SPACE  
+MINUS -
+SPACE  
+ID id
+LEFT_P )
+SPACE  
+DIVIDE /
+SPACE  
+ID id

@@ -1,0 +1,5 @@
+<floattkn><id,b>
+<inttkn><id,a>
+<id,a><assign><num,5>
+<id,b><assign><id,a><plus><num,3.2>
+<print><id,b>
